@@ -76,12 +76,12 @@ WSGI_APPLICATION = 'dashboard_project.wsgi.application'
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "postgres",
-        "USER": "postgres",
-        "PASSWORD": "qwerty123",
-        "HOST": "127.0.0.1",
-        "PORT": "5432",
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'sakila',
+        'USER': "root",
+        'PASSWORD': "admin@123",
+        'HOST': 'localhost',
+        'PORT': '3306',
     }
 }
 

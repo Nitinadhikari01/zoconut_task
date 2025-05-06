@@ -24,19 +24,24 @@ def get_clients_table(request):
     start = int(request.GET.get('start', 0))
     length = int(request.GET.get('length', 10))
     search_value = request.GET.get('search[value]', '').strip()
-    order_column_index = request.GET.get('order[0][column]') # use id for index
-    # print(order_column_index,'------order_column_index')
-    order_direction = request.GET.get('order[0][dir]', 'asc')
-    # print(order_direction,'--------order_direction')
+
+    # Get column ordering
+    order_column_index = request.GET.get('order[0][column]')
+    order_dir = request.GET.get('order[0][dir]', 'asc')
 
     columns = ['id', 'name', 'primary_number', 'country_code', 'timestamp']
-    order_column = columns[int(order_column_index)] if order_column_index else 'id'
-    if order_direction == 'desc':
-        order_column = f'-{order_column}' # if order is desc then add '-' sign in front
-    # print(order_column,'-------order_column-----')
 
-    queryset = Client.objects.all()
+    # Determine order_by field
+    if order_column_index:
+        order_col_name = columns[int(order_column_index)]
+        order_by = order_col_name if order_dir == 'asc' else f'-{order_col_name}'
+    else:
+        order_by = 'id'
 
+    # Base queryset
+    queryset = Client.objects.all().order_by(order_by)
+
+    # Search filter
     if search_value:
         queryset = queryset.filter(
             Q(name__icontains=search_value) |
@@ -44,20 +49,31 @@ def get_clients_table(request):
             Q(country_code__icontains=search_value)
         )
 
+    # Total records
     total_records = Client.objects.count()
+
+    # Filtered records after search
     filtered_records = queryset.count()
-    # both for searching filter
-    # print(queryset,'--------queryset')
 
-    queryset = queryset.order_by(order_column)[start:start + length] # For Pagination and ordering
+    # Paginate
+    queryset = queryset[start:start + length]
 
-    data = list(queryset.values('id', 'name', 'primary_number', 'country_code', 'timestamp')) # Format data for output
+    # Prepare data
+    data = []
+    for client in queryset:
+        data.append({
+            "id": client.id,
+            "name": client.name,
+            "primary_number": client.primary_number,
+            "country_code": client.country_code,
+            "timestamp": client.timestamp.isoformat()  # ISO format for JS Date parsing
+        })
 
     return JsonResponse({
-        'draw': draw,
-        'recordsTotal': total_records,
-        'recordsFiltered': filtered_records,
-        'data': data
+        "draw": draw,
+        "recordsTotal": total_records,
+        "recordsFiltered": filtered_records,
+        "data": data
     })
 
 
