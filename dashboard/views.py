@@ -25,23 +25,19 @@ def get_clients_table(request):
     length = int(request.GET.get('length', 10))
     search_value = request.GET.get('search[value]', '').strip()
 
-    # Get column ordering
     order_column_index = request.GET.get('order[0][column]')
     order_dir = request.GET.get('order[0][dir]', 'asc')
 
     columns = ['id', 'name', 'primary_number', 'country_code', 'timestamp']
 
-    # Determine order_by field
     if order_column_index:
         order_col_name = columns[int(order_column_index)]
         order_by = order_col_name if order_dir == 'asc' else f'-{order_col_name}'
     else:
         order_by = 'id'
 
-    # Base queryset
     queryset = Client.objects.all().order_by(order_by)
 
-    # Search filter
     if search_value:
         queryset = queryset.filter(
             Q(name__icontains=search_value) |
@@ -49,16 +45,12 @@ def get_clients_table(request):
             Q(country_code__icontains=search_value)
         )
 
-    # Total records
     total_records = Client.objects.count()
 
-    # Filtered records after search
     filtered_records = queryset.count()
 
-    # Paginate
     queryset = queryset[start:start + length]
 
-    # Prepare data
     data = []
     for client in queryset:
         data.append({
@@ -66,7 +58,7 @@ def get_clients_table(request):
             "name": client.name,
             "primary_number": client.primary_number,
             "country_code": client.country_code,
-            "timestamp": client.timestamp.isoformat()  # ISO format for JS Date parsing
+            "timestamp": client.timestamp.isoformat()
         })
 
     return JsonResponse({
